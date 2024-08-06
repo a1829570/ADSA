@@ -3,6 +3,31 @@
 #include <algorithm>
 #include <cmath>
 
+// Function declarations
+int maxlen(const std::string& I1, const std::string& I2);
+std::string schoolAddition(const std::string& strI1, const std::string& strI2, int B);
+std::string karatsuba(const std::string& a, const std::string& b);
+
+// Helper functions for Karatsuba
+std::pair<std::string, std::string> split(const std::string& num, int mid);
+std::string addStrings(const std::string& num1, const std::string& num2);
+std::string subtractStrings(const std::string& num1, const std::string& num2);
+std::string padZeros(const std::string& str, int numZeros);
+
+int main() {
+    std::string I1, I2;
+    int B;
+
+    std::cin >> I1 >> I2 >> B;
+    
+    std::string sumResult = schoolAddition(I1, I2, B);
+    std::string productResult = karatsuba(I1, I2);
+
+    std::cout << sumResult << " " << productResult << " 0" << std::endl;
+
+    return 0;
+}
+
 int maxlen(const std::string& I1, const std::string& I2) {
     return std::max(I1.length(), I2.length());
 }
@@ -85,33 +110,22 @@ std::string karatsuba(const std::string& a, const std::string& b) {
     if (n < 4) {
         return std::to_string(std::stoi(a) * std::stoi(b));
     }
+    int k = (n + 1) / 2;
 
-    int m = (n + 1) / 2;
+    std::pair<std::string, std::string> aSplit = split(a, a.size() - k);
+    std::pair<std::string, std::string> bSplit = split(b, b.size() - k);
 
-    auto [a1, a0] = split(a, a.size() - m);
-    auto [b1, b0] = split(b, b.size() - m);
+    std::string a1 = aSplit.first;
+    std::string a0 = aSplit.second;
+    std::string b1 = bSplit.first;
+    std::string b0 = bSplit.second;
 
     std::string P0 = karatsuba(a0, b0);
     std::string P2 = karatsuba(a1, b1);
     std::string P1 = karatsuba(addStrings(a0, a1), addStrings(b0, b1));
 
-    std::string term1 = padZeros(P2, 2 * m);
-    std::string term2 = padZeros(subtractStrings(subtractStrings(P1, P2), P0), m);
+    std::string term1 = padZeros(P2, 2 * k);
+    std::string term2 = padZeros(subtractStrings(subtractStrings(P1, P2), P0), k);
     
     return addStrings(addStrings(term1, term2), P0);
-}
-
-
-int main() {
-    std::string I1, I2;
-    int B;
-
-    std::cin >> I1 >> I2 >> B;
-    
-    std::string sumResult = schoolAddition(I1, I2, B);
-    std::string productResult = karatsuba(I1, I2);
-
-    std::cout << sumResult << " " << productResult << " 0" << std::endl;
-
-    return 0;
 }
