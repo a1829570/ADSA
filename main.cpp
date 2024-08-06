@@ -62,6 +62,10 @@ std::string schoolAddition(const std::string& strI1, const std::string& strI2, i
 }
 
 std::pair<std::string, std::string> split(const std::string& num, int mid) {
+    int len = num.length();
+    if (mid > len) {
+        mid = len;
+    }
     return { num.substr(0, mid), num.substr(mid) };
 }
 
@@ -110,10 +114,15 @@ std::string karatsuba(const std::string& a, const std::string& b) {
     if (n < 4) {
         return std::to_string(std::stoi(a) * std::stoi(b));
     }
+
+    // Pad with zeros to make lengths equal
+    std::string a_padded = std::string(n - a.length(), '0') + a;
+    std::string b_padded = std::string(n - b.length(), '0') + b;
+
     int k = (n + 1) / 2;
 
-    std::pair<std::string, std::string> aSplit = split(a, a.size() - k);
-    std::pair<std::string, std::string> bSplit = split(b, b.size() - k);
+    std::pair<std::string, std::string> aSplit = split(a_padded, n - k);
+    std::pair<std::string, std::string> bSplit = split(b_padded, n - k);
 
     std::string a1 = aSplit.first;
     std::string a0 = aSplit.second;
