@@ -69,11 +69,11 @@ std::string schoolAddition(const std::string& strI1, const std::string& strI2, i
 }
 
 // Karatsuba multiplication function
-std::string karatsuba(std::string strI1, std::string strI2, int base) {
+std::string karatsuba(const std::string& strI1, const std::string& strI2, int base) {
     int n = maxlen(strI1, strI2);
 
-    while (strI1.length() < n) strI1.insert(strI1.begin(), '0');
-    while (strI2.length() < n) strI2.insert(strI2.begin(), '0');
+    while (strI1.length() < static_cast<std::string::size_type>(n)) strI1.insert(strI1.begin(), '0');
+    while (strI2.length() < static_cast<std::string::size_type>(n)) strI2.insert(strI2.begin(), '0');
 
     if (n <= 1) {
         int product = (strI1[0] - '0') * (strI2[0] - '0');
