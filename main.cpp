@@ -3,125 +3,150 @@
 #include <algorithm>
 #include <cmath>
 
-// Helper function to find the maximum length of two strings
-int maxlen(const std::string& I1, const std::string& I2) {
-    return std::max(I1.length(), I2.length());
-}
+using namespace std;
 
-// Helper function to convert a string from a specified base to base-10
-long long convertBaseXToBase10(const std::string& number, int base) {
-    long long result = 0;
-    for (char c : number) {
-        int digit = (c >= '0' && c <= '9') ? (c - '0') : (c - 'A' + 10);
-        result = result * base + digit;
+// Define helper functions
+
+string padZeros(string num, int targetLength) {
+    while (num.length() < targetLength) {
+        num = '0' + num;
     }
-    return result;
+    return num;
 }
 
-// Helper function to convert a base-10 number to a string in a specified base
-std::string convertBase10ToBaseX(long long number, int base) {
-    if (base < 2 || base > 36) return "Base out of range"; // Base should be between 2 and 36
-
-    if (number == 0) return "0";
-
-    std::string result;
-    bool isNegative = (number < 0);
-    if (isNegative) number = -number;
-
-    while (number > 0) {
-        int remainder = number % base;
-        if (remainder < 10) result += (remainder + '0'); // '0' to '9'
-        else result += (remainder - 10 + 'A'); // 'A' to 'Z'
-        number /= base;
+string trimLeadingZeros(string num) {
+    while (!num.empty() && num[0] == '0') {
+        num.erase(0, 1);
     }
-
-    if (isNegative) result += '-';
-    std::reverse(result.begin(), result.end());
-    return result;
+    return num.empty() ? "0" : num;
 }
 
-// Addition function in base B
-std::string schoolAddition(const std::string& strI1, const std::string& strI2, int B) {
-    int len1 = strI1.length();
-    int len2 = strI2.length();
-    int n = maxlen(strI1, strI2);
+string appendZeros(string num, int count) {
+    while (count-- > 0) {
+        num += '0';
+    }
+    return num;
+}
 
-    std::string result;
+void adjustLength(string &num1, string &num2) {
+    num1 = trimLeadingZeros(num1);
+    num2 = trimLeadingZeros(num2);
+    int maxLength = max(num1.length(), num2.length());
+    num1 = padZeros(num1, maxLength);
+    num2 = padZeros(num2, maxLength);
+}
+
+string addStrings(string num1, string num2, int base) {
+    adjustLength(num1, num2);
+    reverse(num1.begin(), num1.end());
+    reverse(num2.begin(), num2.end());
+
+    string sum = "";
     int carry = 0;
 
-    std::string num1 = std::string(n - len1, '0') + strI1;
-    std::string num2 = std::string(n - len2, '0') + strI2;
+    for (int i = 0; i < max(num1.length(), num2.length()); i++) {
+        int digit1 = num1[i] - '0';
+        int digit2 = num2[i] - '0';
+        int tempSum = digit1 + digit2 + carry;
 
-    for (int i = 0; i < n; i++) {
-        int digit1 = num1[num1.length() - 1 - i] - '0';
-        int digit2 = num2[num2.length() - 1 - i] - '0';
-        int sum = digit1 + digit2 + carry;
-        result.push_back((sum % B) + '0');
-        carry = sum / B;
+        if (tempSum < base) {
+            carry = 0;
+        } else {
+            carry = tempSum / base;
+            tempSum %= base;
+        }
+
+        sum += (tempSum + '0');
     }
 
-    if (carry > 0) {
-        result.push_back(carry + '0');
+    if (carry != 0) {
+        sum += (carry + '0');
     }
 
-    std::reverse(result.begin(), result.end());
+    reverse(sum.begin(), sum.end());
+    return trimLeadingZeros(sum);
+}
+
+string subtractStrings(string num1, string num2, int base) {
+    adjustLength(num1, num2);
+    string difference = "";
+    int borrow = 0;
+
+    for (int i = num1.length() - 1; i >= 0; i--) {
+        int digit1 = num1[i] - '0';
+        int digit2 = num2[i] - '0';
+        int tempDiff = digit1 - digit2 - borrow;
+
+        if (tempDiff < 0) {
+            tempDiff += base;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+
+        difference = to_string(tempDiff) + difference;
+    }
+
+    return trimLeadingZeros(difference);
+}
+
+string multiplySingleDigit(string num1, string num2, int base) {
+    int singleDigit = num2[0] - '0';
+    string result = "0";
+
+    for (int i = 0; i < singleDigit; i++) {
+        result = addStrings(result, num1, base);
+    }
+
     return result;
 }
 
-// Karatsuba multiplication function
-std::string karatsuba(const std::string& strI1, const std::string& strI2, int base) {
-    int n = maxlen(strI1, strI2);
+string karatsubaMultiply(string num1, string num2, int base) {
+    num1 = trimLeadingZeros(num1);
+    num2 = trimLeadingZeros(num2);
 
-    while (strI1.length() < static_cast<std::string::size_type>(n)) strI1.insert(strI1.begin(), '0');
-    while (strI2.length() < static_cast<std::string::size_type>(n)) strI2.insert(strI2.begin(), '0');
+    if (num1 == "0" || num2 == "0") return "0";
+    int length = max(num1.length(), num2.length());
 
-    if (n <= 1) {
-        int product = (strI1[0] - '0') * (strI2[0] - '0');
-        return convertBase10ToBaseX(product, base);
-    }
+    if (length <= 1) return multiplySingleDigit(num1, num2, base);
 
-    int k = n / 2;
+    if (length % 2 != 0) length++;
+    int halfLength = length / 2;
 
-    std::string a1 = strI1.substr(0, n - k);
-    std::string a0 = strI1.substr(n - k);
-    std::string b1 = strI2.substr(0, n - k);
-    std::string b0 = strI2.substr(n - k);
+    num1 = padZeros(num1, length);
+    num2 = padZeros(num2, length);
 
-    std::string P0 = karatsuba(a0, b0, base);
-    std::string P1 = karatsuba(a1, b1, base);
+    string high1 = num1.substr(0, halfLength);
+    string low1 = num1.substr(halfLength);
+    string high2 = num2.substr(0, halfLength);
+    string low2 = num2.substr(halfLength);
 
-    std::string sumA = schoolAddition(a0, a1, base);
-    std::string sumB = schoolAddition(b0, b1, base);
+    string z2 = karatsubaMultiply(high1, high2, base);
+    string z0 = karatsubaMultiply(low1, low2, base);
+    string z1 = subtractStrings(
+        subtractStrings(
+            karatsubaMultiply(addStrings(high1, low1, base), addStrings(high2, low2, base), base),
+            z2,
+            base),
+        z0,
+        base);
 
-    std::string P2 = karatsuba(sumA, sumB, base);
+    z2 = appendZeros(z2, 2 * halfLength);
+    z1 = appendZeros(z1, halfLength);
 
-    long long p0 = convertBaseXToBase10(P0, base);
-    long long p1 = convertBaseXToBase10(P1, base);
-    long long p2 = convertBaseXToBase10(P2, base);
-
-    long long powBaseK = static_cast<long long>(pow(base, k));
-    long long powBase2K = static_cast<long long>(pow(base, 2 * k));
-
-    std::string result1 = convertBase10ToBaseX(p1 * powBase2K, base);
-    std::string result2 = convertBase10ToBaseX((p2 - p1 - p0) * powBaseK, base);
-    std::string result3 = P0;
-
-    std::string finalResult = schoolAddition(result1, result2, base);
-    finalResult = schoolAddition(finalResult, result3, base);
-
-    return finalResult;
+    return addStrings(addStrings(z2, z1, base), z0, base);
 }
 
 int main() {
-    std::string I1, I2;
-    int B;
+    string num1, num2, baseStr;
+    cin >> num1 >> num2 >> baseStr;
 
-    std::cin >> I1 >> I2 >> B;
+    int base = stoi(baseStr);
 
-    std::string sumResult = schoolAddition(I1, I2, B);
-    std::string multiplication = karatsuba(I1, I2, B);
+    string sum = trimLeadingZeros(addStrings(num1, num2, base));
+    string product = trimLeadingZeros(karatsubaMultiply(num1, num2, base));
 
-    std::cout << sumResult << " " << multiplication << " 0" << std::endl;
+    cout << sum << " " << product << " 0" << endl;
 
     return 0;
 }
