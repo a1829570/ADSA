@@ -114,6 +114,17 @@ Node* minimumValueNode(Node* node) {
     return current;
 }
 
+// Utility function to find the node with the maximum key value found in that tree
+Node* maximumValueNode(Node* node) {
+    Node* current = node;
+    
+    // Loop down to find the rightmost leaf
+    while (current->right != nullptr)
+        current = current->right;
+
+    return current;
+}
+
 // Delete function
 Node* deleteNode(Node* root, int key) {
     // STEP 1: PERFORM STANDARD BST DELETE
@@ -143,14 +154,14 @@ Node* deleteNode(Node* root, int key) {
 
             delete temp;
         } else {
-            // Node with two children: Get the inorder successor (smallest in the right subtree)
-            Node* temp = minimumValueNode(root->right);
+            // Node with two children: Get the inorder predecessor (largest in the left subtree)
+            Node* temp = maximumValueNode(root->left);
 
-            // Copy the inorder successor's data to this node
+            // Copy the inorder predecessor's data to this node
             root->key = temp->key;
 
-            // Delete the inorder successor
-            root->right = deleteNode(root->right, temp->key);
+            // Delete the inorder predecessor
+            root->left = deleteNode(root->left, temp->key);
         }
     }
 
